@@ -37,38 +37,36 @@ Lemma sorted_i_ind: forall x0 x1 xs,
   x0 <= x1 ->
   is_true (sorted_i x0 (x1 :: xs)).
 Proof.
-move=> x0 x1 xs Hx0_min Hx0_le_x1.
-rewrite /is_true /sorted_i.
-rewrite Bool.andb_true_iff.
-split.
-  rewrite Nat.leb_le.
-  by apply Hx0_le_x1.
-induction xs.
-  by [].
-rename a into x2.
-rewrite Bool.andb_true_iff.
-split.
-  move: Hx0_min.
-  rewrite /is_true /sorted_i Bool.andb_true_iff.
-  by apply proj1.
-suff: xs = [] \/ (exists x3 xs', xs = x3 :: xs').
-  case.
+move=> x0 x1 xs Hsorted Hx0_le_x1.
+suff:
+  xs = [] \/ (
+    ( exists x2 xs', xs = x2 :: xs' -> 
+      is_true ( (x1 <=? x2) && sorted_i x1 (x2 :: xs') ) ) ).
+  case => /=.
   - move=> Hxs.
-    by rewrite Hxs.
-  - case.
-    move=> x3.
-    case.
-    move=> xs' Hxs.
-    rewrite Hxs Bool.andb_true_iff.
+    rewrite Hxs /is_true Bool.andb_true_iff Nat.leb_le.
     split.
-      move: Hx0_min.
-      rewrite Hxs /is_true /sorted_i.
-      rewrite Bool.andb_true_iff Bool.andb_true_iff.
-Restart.
-move=> x0 x1 xs Hxs_min Hx0_le_x1.
-suff: 
-
-
+      by [].
+      by [].
+  - case.
+    move=> x2.
+    case.
+    move=> xs'.
+    rewrite /is_true 3!Bool.andb_true_iff.
+    split.
+    - by rewrite Nat.leb_le.
+    - move: Hsorted.
+      by rewrite /is_true.
+move: Hsorted.
+rewrite {1}/sorted_i.
+case_eq xs.
+- move=> Hxs _.
+  by left.
+- move=> x2 xs' Hxs.
+  rewrite /is_true Bool.andb_true_iff.
+  case.
+  move=> Hx1_le_x2.
+  case xs.
 
 
 
