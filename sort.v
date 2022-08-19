@@ -6,13 +6,8 @@ Set Implicit Arguments.
 
 Module Sort.
 
-Definition Sorted (xs: list nat): Prop :=
-  forall x y i j: nat,
-  nth_error xs i = Some x ->
-  nth_error xs j = Some y ->
-  i < j -> x <= y.
-
 Local Open Scope list_scope.
+Local Open Scope bool_scope.
 
 Lemma length_nil {A: Type}:
   length ([]: list A) = 0.
@@ -22,82 +17,83 @@ Lemma length_cons {A: Type} (xs: list A) (x: A):
   length (x :: xs) = S (length xs).
 Proof. by []. Qed.
 
-Lemma sorted_min (xs: list nat) (x: nat):
-  Sorted (x :: xs) ->
-  forall y i: nat,
-  nth_error (x :: xs) i = Some y ->
-  x <= y.
+
+Fixpoint sorted_i (x1: nat) (xs: list nat): bool :=
+  match xs with
+  | [] => true
+  | x2 :: xs' => (x1 <=? x2) && sorted_i x2 xs'
+  end.
+
+Definition sorted (xs: list nat): bool :=
+  match xs with
+  | [] => true
+  | x :: [] => true
+  | x :: ys => sorted_i x ys
+  end.
+
+(* x0 :: x1 :: x2 :: x3 :: _*)
+Lemma sorted_i_ind: forall x0 x1 xs,
+  is_true (sorted_i x1 xs) ->
+  x0 <= x1 ->
+  is_true (sorted_i x0 (x1 :: xs)).
 Proof.
-
-
-
-
-
-(* 
-Lemma nth_error_some_length {A: Type} (xs: list A) (i: nat):
-  (exists (x: A), nth_error xs i = Some x) -> i < length xs.
-Proof.
+move=> x0 x1 xs Hx0_min Hx0_le_x1.
+rewrite /is_true /sorted_i.
+rewrite Bool.andb_true_iff.
+split.
+  rewrite Nat.leb_le.
+  by apply Hx0_le_x1.
 induction xs.
-- case.
-  suff: nth_error ([]: list A) i = None.
-  + move=> Hnth_none.
-    by rewrite Hnth_none.
-  + apply nth_error_None.
-    rewrite length_nil.
-    by apply le_0_n.
-- case.
-  move=> x Hxs_some.
-  rewrite length_cons.
-(* ぜーんぜん解けないんだけど！？！？ *)
-Abort.
- *)
-
-Lemma sorted_nil:
-  Sorted [].
-Proof.
-rewrite /Sorted.
-move=> x y i j Hx Hy H_i_lt_j.
-move: Hx.
-suff: nth_error ([]: list nat) i = None.
-- move=> Hnth_none.
-  rewrite Hnth_none.
   by [].
-- apply nth_error_None.
-  rewrite length_nil.
-  by apply le_0_n.
-Qed.
+rename a into x2.
+rewrite Bool.andb_true_iff.
+split.
+  move: Hx0_min.
+  rewrite /is_true /sorted_i Bool.andb_true_iff.
+  by apply proj1.
+suff: xs = [] \/ (exists x3 xs', xs = x3 :: xs').
+  case.
+  - move=> Hxs.
+    by rewrite Hxs.
+  - case.
+    move=> x3.
+    case.
+    move=> xs' Hxs.
+    rewrite Hxs Bool.andb_true_iff.
+    split.
+      move: Hx0_min.
+      rewrite Hxs /is_true /sorted_i.
+      rewrite Bool.andb_true_iff Bool.andb_true_iff.
+Restart.
+move=> x0 x1 xs Hxs_min Hx0_le_x1.
+suff: 
 
-(* Lemma sorted_ind (x: nat) (xs: list nat):
-  Sorted xs -> (forall y, In y xs -> x <= y) -> Sorted (x :: xs).
+
+
+
+
+
+
+
+
+
+
+Lemma sorted_ind: forall x xs,
+  is_true (sorted xs) -> (forall y, In y xs -> x <= y) -> is_true ( sorted (x :: xs) ).
 Proof.
-move=> Hxs_sorted Hy_in_xs.
-rewrite /Sorted.
-move=> x0 y0 i j Hx0 Hy0 Hi_lt_j. *)
-
-
-
-
-Lemma sorted_one(x: nat):
-  Sorted [x].
-Proof.
-rewrite /Sorted.
-move=> x0 y0 i j Hx0 Hy0.
-have: i = 0.
-Search (nth_error _ _= Some _) In.
-move: Hx0.
-rewrite nth_error_In.
-
-
-
-Lemma sorted_ind {A: Type} (xs: list nat) (x: nat):
-  Sorted xs -> (forall y, In y xs -> x <= y) -> Sorted (x :: xs).
-Proof.
-induction xs.
-move=> _ _.
-
-
-
-
-
-
-
+move=> x1 xs1 Hsorted Hmin.
+rewrite /is_true /sorted.
+case_eq xs1 => //=.
+move=> x2 xs2 Hxs1.
+case xs2.
+- rewrite Nat.leb_le.
+  specialize (Hmin x2).
+  apply Hmin.
+  rewrite Hxs1.
+  by apply in_eq.
+- move=> x3 xs3.
+Restart.
+move=> x1 xs1 Hsorted Hmin.
+rewrite /is_true /sorted.
+induction xs1.
+by [].
