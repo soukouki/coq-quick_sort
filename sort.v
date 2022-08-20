@@ -9,7 +9,7 @@ Module Sort.
 Local Open Scope list_scope.
 Local Open Scope bool_scope.
 
-Function sorted (xs: list nat): bool :=
+Fixpoint sorted (xs: list nat): bool :=
   match xs with
   | [] => true
   | x1 :: [] => true
@@ -17,17 +17,11 @@ Function sorted (xs: list nat): bool :=
   end.
 
 (* (x1 :: x2 :: x3 :: x4 :: _) as xs *)
-Lemma sorted_ind': forall x1 x2 xs3,
+Lemma sorted_ind: forall x1 x2 xs3,
   sorted (x2 :: xs3) = true ->
   x1 <= x2 ->
   sorted (x1 :: x2 :: xs3) = true.
 Proof.
-(*
-induction xsで、
-- xs = []
-- forall xsに対してxs=[x3, xs']
-の2つに分かれてほしい
-*)
 move=> x1 x2 xs3.
 move: x1 x2.
 move: xs3.
@@ -75,4 +69,49 @@ induction xs3.
   case.
   by [].
 Qed.
+
+Lemma sorted_ind_inv: forall x1 x2 xs3,
+  sorted (x1 :: x2 :: xs3) = true -> sorted (x2 :: xs3) = true /\ x1 <= x2.
+Proof.
+move=> x1 x2 xs3 Hsorted.
+split.
+- move: Hsorted.
+  rewrite {1}/sorted.
+  rewrite -/sorted.
+  (* 次の展開時に -/sorted すること！ *)
+  rewrite Bool.andb_true_iff.
+  case.
+    move=> Hx1_le_x2.
+  case xs3.
+    by [].
+  move=> x3 xs4.
+  by rewrite Bool.andb_true_iff.
+- move: Hsorted.
+  rewrite /sorted -/sorted.
+  rewrite Bool.andb_true_iff Nat.leb_le.
+  by case.
+Qed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
