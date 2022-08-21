@@ -85,27 +85,41 @@ induction xs1.
 Qed.
 
 Lemma sorted_app: forall xas xa xb xbs,
-  sorted (xas ++ xa :: []) ->
+  sorted (xas ++ [xa]) ->
   sorted (xb :: xbs) ->
   xa <= xb ->
   sorted (xas ++ xa :: xb :: xbs).
 Proof.
 move=> xas xa xb xbs Hsorted_a Hsorted_b Hxa_le_xb.
-have: sorted (xa :: xb :: xbs).
-  by [].
-move: xas xa Hxa_le_xb Hsorted_a.
+move: xas Hsorted_a.
 induction xas.
-- by [].
-- rename a into x.
-  move=> xa Hxa_le_xb Hsorted_x_xas_xa Hsorted_xa_xb_xbs.
-  rewrite /sorted /= -/sorted.
-  suff: sorted (xas ++ xa :: xb ::xbs).
-    case xas.
-    - rewrite /=.
-      suff: x <= xa.
-        by [].
-      move: Hsorted_x_xas_xa.
-      
+  by [].
+rename a into x1.
+move=> Hsorted_a.
+case_eq xas.
+- move=> Hxas.
+  subst.
+  apply sorted_ind.
+  + by apply IHxas.
+  + move: Hsorted_a.
+    rewrite /=.
+    by case.
+- move=> x2 xs2 Hxas.
+  subst.
+  have: sorted((x2 :: xs2) ++ xa :: xb ::xbs).
+    apply IHxas.
+    by apply Hsorted_a.
+  clear IHxas.
+  set (xs := xa :: xb :: xbs).
+  rewrite /=.
+  move=> H.
+  split.
+  + move: Hsorted_a.
+    rewrite /=.
+    by case.
+  + by [].
+Qed.
+
 
 
 
