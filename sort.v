@@ -1,4 +1,4 @@
-Require Import List PeanoNat FunInd.
+Require Import List PeanoNat FunInd Arith.Wf_nat.
 Import ListNotations.
 From mathcomp Require Import ssreflect.
 
@@ -39,14 +39,34 @@ split.
   by case.
 Qed.
 
+Lemma sorted_skip: forall x1 x2 xs,
+  sorted (x1 :: x2 :: xs) -> sorted (x1 :: xs).
+move=> x1 x2 x.
+rewrite /=.
+case.
+move=> Hx1_le_x2.
+rename x into xs2.
+case_eq xs2.
+  by [].
+move=> x3 xs3 Hxs2.
+case.
+move=> Hx2_le_x3.
+move=> Hsorted.
+split.
+- move: (Nat.le_trans x1 x2 x3).
+  apply.
+  + by [].
+  + by [].
+by [].
+Qed.
+
 Lemma sorted_min: forall x1 xs x,
   sorted (x1 :: xs) ->
   In x xs ->
   x1 <= x.
 Proof.
 move=> x1 xs x Hsorted Hinx.
-move: in_split => Hin_split.
-specialize (Hin_split nat x xs).
+move: (in_split x xs) => Hin_split.
 move: Hin_split.
 case.
   by [].
@@ -62,26 +82,12 @@ induction xs1.
   case.
   by [].
 - rename a into x2.
+  rewrite -app_comm_cons.
   move=> H.
   apply IHxs1.
   move: H.
-  have: x1 :: (x2 :: xs1) ++ x :: xs2 = x1 :: x2 :: xs1 ++ x :: xs2.
-    by [].
-  move=> H.
-  rewrite H.
-  clear H.
   set xs := xs1 ++ x :: xs2.
-  rewrite /=.
-  case.
-  move=> Hx1_le_x2.
-  case_eq xs => //=.
-  move=> x3 xs3 Hxs.
-  case.
-  move=> Hx2_le_x3 Hxs3.
-  split.
-  + move: Hx1_le_x2 Hx2_le_x3.
-    by apply Nat.le_trans.
-  + by apply Hxs3.
+  by apply sorted_skip.
 Qed.
 
 Lemma sorted_app: forall xas xa xb xbs,
@@ -111,6 +117,7 @@ case_eq xas.
     by apply Hsorted_a.
   clear IHxas.
   set (xs := xa :: xb :: xbs).
+  (* appendがあるからつらい・・ *)
   rewrite /=.
   move=> H.
   split.
@@ -119,11 +126,6 @@ case_eq xas.
     by case.
   + by [].
 Qed.
-
-
-
-
-
 
 
 
