@@ -1,4 +1,4 @@
-Require Import List PeanoNat FunInd Arith.Wf_nat.
+Require Import List PeanoNat FunInd Arith.Wf_nat Recdef.
 Import ListNotations.
 From mathcomp Require Import ssreflect.
 
@@ -116,8 +116,9 @@ case_eq xas.
     apply IHxas.
     by apply Hsorted_a.
   clear IHxas.
-  set (xs := xa :: xb :: xbs).
-  (* appendがあるからつらい・・ *)
+  generalize (xa :: xb :: xbs).
+  move=> xs.
+  (* sorted_invあたりを使おうかと思ったけど、appendがあるからつらい・・ *)
   rewrite /=.
   move=> H.
   split.
@@ -127,8 +128,41 @@ case_eq xas.
   + by [].
 Qed.
 
+Function quick_sort (xs1: list nat) {measure length}: list nat :=
+  match xs1 with
+  | [] => []
+  | x1 :: [] => [x1]
+  | pivot :: xs2 =>
+    let (left, right) := partition (Nat.leb pivot) xs2 in
+      (quick_sort left) ++ (pivot :: (quick_sort right))
+  end.
+Proof.
+(* xs1 = pivot :: x2 :: xs3 *)
+(* xs2 = x2 :: xs3 *)
+move=> xs1 pivot xs2 x2 xs3 Hxs2 Hxs1 left right Hpartition.
+move: (partition_length (Nat.leb pivot) xs2).
+rewrite Hxs2.
+move=> Hlength_xs2.
+specialize (Hlength_xs2 left right Hpartition).
+apply (Nat.le_lt_trans (length right) (length (x2 :: xs3)) (length (pivot :: x2 :: xs3))).
+- rewrite Hlength_xs2 Nat.add_comm.
+  apply Nat.le_add_r.
+- by [].
 
+(* leftとrightを入れ替えてもう一度同じことをする *)
+move=> xs1 pivot xs2 x2 xs3 Hxs2 Hxs1 left right Hpartition.
+move: (partition_length (Nat.leb pivot) xs2).
+rewrite Hxs2.
+move=> Hlength_xs2.
+specialize (Hlength_xs2 left right Hpartition).
+apply (Nat.le_lt_trans (length left) (length (x2 :: xs3)) (length (pivot :: x2 :: xs3))).
+- rewrite Hlength_xs2.
+  apply Nat.le_add_r.
+- by [].
+Qed.
 
+Theorem quick_sort_sorted: forall xs: list nat,
+  sorted (quick_sort xs).
 
 
 
