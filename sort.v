@@ -134,7 +134,7 @@ Function quick_sort (xs1: list nat) {measure length}: list nat :=
   | x1 :: [] => [x1]
   | pivot :: xs2 =>
     let (left, right) := partition (Nat.leb pivot) xs2 in
-      (quick_sort left) ++ (pivot :: (quick_sort right))
+      (quick_sort right) ++ (pivot :: (quick_sort left))
   end.
 Proof.
 (* xs1 = pivot :: x2 :: xs3 *)
@@ -144,8 +144,8 @@ move: (partition_length (Nat.leb pivot) xs2).
 rewrite Hxs2.
 move=> Hlength_xs2.
 specialize (Hlength_xs2 left right Hpartition).
-apply (Nat.le_lt_trans (length right) (length (x2 :: xs3)) (length (pivot :: x2 :: xs3))).
-- rewrite Hlength_xs2 Nat.add_comm.
+apply (Nat.le_lt_trans (length left) (length (x2 :: xs3)) (length (pivot :: x2 :: xs3))).
+- rewrite Hlength_xs2.
   apply Nat.le_add_r.
 - by [].
 
@@ -155,19 +155,47 @@ move: (partition_length (Nat.leb pivot) xs2).
 rewrite Hxs2.
 move=> Hlength_xs2.
 specialize (Hlength_xs2 left right Hpartition).
-apply (Nat.le_lt_trans (length left) (length (x2 :: xs3)) (length (pivot :: x2 :: xs3))).
-- rewrite Hlength_xs2.
+apply (Nat.le_lt_trans (length right) (length (x2 :: xs3)) (length (pivot :: x2 :: xs3))).
+- rewrite Hlength_xs2 Nat.add_comm.
   apply Nat.le_add_r.
 - by [].
 Qed.
 
 Theorem quick_sort_sorted: forall xs: list nat,
   sorted (quick_sort xs).
-
-
-
-
-
+move=> xs.
+induction xs.
+  by rewrite quick_sort_equation.
+rename a into x1.
+rename IHxs into IHxs1.
+induction xs.
+  by rewrite quick_sort_equation.
+rename a into x2.
+rename IHxs into IHxs2.
+rewrite quick_sort_equation.
+rewrite /=.
+move: x1 x2 xs IHxs1 IHxs2.
+induction xs.
+- case_eq (x1 <=? x2).
+  + move=> Hx1_le_x2.
+    rewrite /=.
+    rewrite 2!quick_sort_equation /=.
+    split.
+    * move: Hx1_le_x2.
+      by rewrite Nat.leb_le.
+    * by [].
+  + move=> Hx2_le_x1.
+    rewrite /=.
+    rewrite 2!quick_sort_equation /=.
+    split.
+    * move: Hx2_le_x1.
+      rewrite Nat.leb_gt.
+      by apply Nat.lt_le_incl.
+    * by [].
+- rename a into x3.
+  move=> IHxs1 IHxs2.
+  rewrite /=.
+  apply IHxs.
 
 
 
