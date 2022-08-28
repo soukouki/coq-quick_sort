@@ -161,41 +161,64 @@ apply (Nat.le_lt_trans (length right) (length (x2 :: xs3)) (length (pivot :: x2 
 - by [].
 Qed.
 
+Lemma quick_sort_nil:
+  quick_sort [] = [].
+Proof.
+by rewrite quick_sort_equation.
+Qed.
+
+Lemma quick_sort_one: forall x1,
+  quick_sort [x1] = [x1].
+Proof.
+move=> x1.
+by rewrite quick_sort_equation.
+Qed.
+
+Lemma quick_sort_two_sorted: forall x1 x2,
+  sorted (quick_sort [x1; x2]).
+Proof.
+move=> x1 x2.
+case_eq (x1 <=? x2).
++ move=> Hx1_le_x2.
+  rewrite quick_sort_equation /=.
+  rewrite Hx1_le_x2.
+  rewrite quick_sort_nil quick_sort_one /=.
+  split => //=.
+  move: Hx1_le_x2.
+  by rewrite Nat.leb_le.
++ move=> Hx2_le_x1.
+  rewrite /=.
+  rewrite quick_sort_equation /=.
+  rewrite Hx2_le_x1.
+  rewrite quick_sort_one quick_sort_nil /=.
+  split => //=.
+  move: Hx2_le_x1.
+  rewrite Nat.leb_gt.
+  by apply Nat.lt_le_incl.
+Qed.
+
+(* 多分これ、sortedとquick_sortを分けてやる方が楽なんじゃないかな。一旦x1<=x2<=x3みたいな形を証明して、それをさらにsortedと同等だと示す感じ *)
+
 Theorem quick_sort_sorted: forall xs: list nat,
   sorted (quick_sort xs).
+(* 帰納法のbase case *)
 move=> xs.
 induction xs.
-  by rewrite quick_sort_equation.
+  by rewrite quick_sort_nil.
 rename a into x1.
 rename IHxs into IHxs1.
 induction xs.
-  by rewrite quick_sort_equation.
+  by rewrite quick_sort_one.
 rename a into x2.
 rename IHxs into IHxs2.
-rewrite quick_sort_equation.
-rewrite /=.
-move: x1 x2 xs IHxs1 IHxs2.
 induction xs.
-- case_eq (x1 <=? x2).
-  + move=> Hx1_le_x2.
-    rewrite /=.
-    rewrite 2!quick_sort_equation /=.
-    split.
-    * move: Hx1_le_x2.
-      by rewrite Nat.leb_le.
-    * by [].
-  + move=> Hx2_le_x1.
-    rewrite /=.
-    rewrite 2!quick_sort_equation /=.
-    split.
-    * move: Hx2_le_x1.
-      rewrite Nat.leb_gt.
-      by apply Nat.lt_le_incl.
-    * by [].
-- rename a into x3.
-  move=> IHxs1 IHxs2.
-  rewrite /=.
-  apply IHxs.
+  by apply quick_sort_two_sorted.
+rename a into x3.
+move: IHxs => IHxs3.
+(* 帰納法のinduction step *)
+
+
+
 
 
 
