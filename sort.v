@@ -87,6 +87,7 @@ induction xs1.
   by apply sorted_skip.
 Qed.
 
+(* 命名とsorted_ind_invとの違いがキモい *)
 Lemma sorted_min_inv: forall x1 xs,
   (forall x, In x xs -> x1 <= x) ->
   sorted xs ->
@@ -227,7 +228,7 @@ rewrite IHxs.
   by right.
 Qed.
 
-Lemma quick_sort_min_first_stand: forall x1 xs,
+Lemma quick_sort_min_head_stand: forall x1 xs,
   (forall x, In x xs -> x1 <= x) ->
   exists xs', x1 :: xs' = quick_sort (x1 :: xs).
 Proof.
@@ -245,6 +246,41 @@ move=> x Hx_in.
 rewrite Nat.leb_le.
 by apply Hmin.
 Qed.
+
+Lemma quick_sort_in: forall xs x,
+  In x xs <-> In x (quick_sort xs).
+Proof.
+split.
+- 
+  induction xs => //.
+  rename a into x1.
+  induction xs; try rewrite quick_sort_one //.
+  rename a into x2.
+  rewrite quick_sort_equation.
+  
+
+流れ
+x = x1 \/ In x left \/ In x right.
+
+
+
+Lemma quick_sort_inv: forall x1 xs,
+  sorted (x1 :: quick_sort xs) ->
+  sorted (quick_sort (x1 :: xs)).
+Proof.
+move=> x1 xs Hsorted.
+have: (forall x, In x (quick_sort xs) -> x1 <= x).
+  by apply sorted_min.
+move=> Hmin.
+move: quick_sort_min_head_stand => head_stand.
+specialize (head_stand x1 xs).
+have: exists xs', x1 :: xs' = quick_sort (x1 :: xs).
+  apply head_stand.
+  
+
+case.
+move=> xs' Hxs'.
+rewrite Hxs'.
 
 
 
@@ -265,14 +301,16 @@ move=> H; rewrite H; clear H.
 rewrite partition_true_forall.
 - rewrite quick_sort_equation.
   suff: sorted (x1 :: quick_sort (x2 :: xs)) => //.
+
+
+
+
+
   case_eq (quick_sort (x2 :: xs)) => //.
   move=> x3 xs3 Hquick_sort.
   apply sorted_ind.
   + move: (sorted_min x3 xs3) => H.
     apply H.
-
-
-
 
 
 
