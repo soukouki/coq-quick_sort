@@ -16,18 +16,18 @@ Fixpoint sorted (xs: list nat): Prop :=
   | x1 :: (x2 :: _) as xs' => x1 <= x2 /\ sorted xs'
   end.
 
-Lemma sorted_ind: forall x1 x2 xs3,
-  sorted (x2 :: xs3) ->
+Lemma sorted_ind: forall x1 x2 xs2,
+  sorted (x2 :: xs2) ->
   x1 <= x2 ->
-  sorted (x1 :: x2 :: xs3).
+  sorted (x1 :: x2 :: xs2).
 Proof.
 by [].
 Qed.
 
-Lemma sorted_ind_inv: forall x1 x2 xs3,
-  sorted (x1 :: x2 :: xs3) -> sorted (x2 :: xs3) /\ x1 <= x2.
+Lemma sorted_ind_inv: forall x1 x2 xs2,
+  sorted (x1 :: x2 :: xs2) -> sorted (x2 :: xs2) /\ x1 <= x2.
 Proof.
-move=> x1 x2 xs3 Hsorted.
+move=> x1 x2 xs2 Hsorted.
 split.
 - move: Hsorted.
   rewrite {1}/sorted.
@@ -60,16 +60,13 @@ split.
 by [].
 Qed.
 
-Lemma sorted_min: forall x1 xs x,
-  sorted (x1 :: xs) ->
-  In x xs ->
-  x1 <= x.
+Lemma sorted_min: forall x1 xs,
+  sorted (x1 :: xs) -> (forall x, In x xs -> x1 <= x).
 Proof.
-move=> x1 xs x Hsorted Hinx.
+move=> x1 xs Hsorted x Hinx.
 move: (in_split x xs) => Hin_split.
 move: Hin_split.
-case.
-  by [].
+case => //.
 move=> xs1.
 case.
 move=> xs2 Hxs.
@@ -88,6 +85,22 @@ induction xs1.
   move: H.
   set xs := xs1 ++ x :: xs2.
   by apply sorted_skip.
+Qed.
+
+Lemma sorted_min_inv: forall x1 xs,
+  (forall x, In x xs -> x1 <= x) ->
+  sorted xs ->
+  sorted (x1 :: xs).
+Proof.
+move=> x1 xs Hmin Hsorted.
+case_eq xs => //.
+move=> x2 xs2.
+move=> Hxs.
+split.
+- apply (Hmin x2).
+  rewrite Hxs /=.
+  by left.
+- by rewrite -Hxs.
 Qed.
 
 Lemma sorted_app: forall xas xa xb xbs,
@@ -128,6 +141,7 @@ case_eq xas.
   + by [].
 Qed.
 
+(* TODO: x1 :: xs1の形に変える *)
 Function quick_sort (xs1: list nat) {measure length}: list nat :=
   match xs1 with
   | [] => []
@@ -174,7 +188,7 @@ move=> x1.
 by rewrite quick_sort_equation.
 Qed.
 
-Lemma quick_sort_two_sorted: forall x1 x2,
+Lemma quick_sort_sorted_two: forall x1 x2,
   sorted (quick_sort [x1; x2]).
 Proof.
 move=> x1 x2.
@@ -197,6 +211,71 @@ case_eq (x1 <=? x2).
   by apply Nat.lt_le_incl.
 Qed.
 
+Lemma partition_true_forall {A: Type}: forall (f: A -> bool) (xs: list A),
+  (forall x, In x xs -> f x = true) -> partition f xs = (xs, []).
+Proof.
+induction xs => //=.
+rename a into x1.
+move=> Hf_true.
+rewrite IHxs.
+- suff: f x1 = true.
+    by [move=> H; rewrite H].
+  apply Hf_true.
+  by left.
+- move=> x Hin.
+  apply Hf_true.
+  by right.
+Qed.
+
+Lemma quick_sort_min_first_stand: forall x1 xs,
+  (forall x, In x xs -> x1 <= x) ->
+  exists xs', x1 :: xs' = quick_sort (x1 :: xs).
+Proof.
+induction xs.
+  move=> Hmin.
+  exists [].
+  by rewrite quick_sort_one.
+rename a into x2.
+move=> Hmin.
+rewrite quick_sort_equation.
+rewrite partition_true_forall.
+  rewrite quick_sort_nil /=.
+  by exists (quick_sort (x2 :: xs)).
+move=> x Hx_in.
+rewrite Nat.leb_le.
+by apply Hmin.
+Qed.
+
+
+
+Lemma quick_sort_min_first: forall x1 xs,
+  (forall x, In x xs -> x1 <= x) ->
+  sorted (quick_sort (x1 :: xs)).
+Proof.
+induction xs.
+  by rewrite quick_sort_one.
+move=> Hx1_le_x2_and_xs.
+rename a into x2.
+rewrite quick_sort_equation /=.
+have: x1 <=? x2 = true.
+  rewrite Nat.leb_le.
+  apply (Hx1_le_x2_and_xs x2).
+  by apply in_eq.
+move=> H; rewrite H; clear H.
+rewrite partition_true_forall.
+- rewrite quick_sort_equation.
+  suff: sorted (x1 :: quick_sort (x2 :: xs)) => //.
+  case_eq (quick_sort (x2 :: xs)) => //.
+  move=> x3 xs3 Hquick_sort.
+  apply sorted_ind.
+  + move: (sorted_min x3 xs3) => H.
+    apply H.
+
+
+
+
+
+
 (* 多分これ、sortedとquick_sortを分けてやる方が楽なんじゃないかな。一旦x1<=x2<=x3みたいな形を証明して、それをさらにsortedと同等だと示す感じ *)
 
 Theorem quick_sort_sorted: forall xs: list nat,
@@ -212,14 +291,20 @@ induction xs.
 rename a into x2.
 rename IHxs into IHxs2.
 induction xs.
-  by apply quick_sort_two_sorted.
+  by apply quick_sort_sorted_two.
 rename a into x3.
 move: IHxs => IHxs3.
 (* 帰納法のinduction step *)
+partitionまで遡ったらなにか見えたりしないかな・・・・
 
-
-
-
+できることとできないこと
+できる
+- 決まった要素数に対して、sorted(quick_sort)
+困り
+- xsあるから、quick_sort xsの、例えば先頭にxsの要素が来るかも知れない
+  - つまり、quick_sort後の並びについて直接扱えない
+  - sorted(quick_sort)に対する補題を考えて、その上で処理するしかない
+    - 紙に書いたような処理をするための補題を考えていくしか無い
 
 
 
