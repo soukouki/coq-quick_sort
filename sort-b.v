@@ -346,6 +346,73 @@ partitionまで遡ったらなにか見えたりしないかな・・・・
 
 
 
+Theorem quick_sort_sorted: forall xs,
+  sorted (quick_sort xs).
+Proof.
+(* 帰納法のbase case...と思ってたけれど、これcaseで十分説がある *)
+move=> xs.
+induction xs.
+  by rewrite quick_sort_nil.
+rename a into x1.
+rename IHxs into IHxs1.
+induction xs.
+  by rewrite quick_sort_one.
+rename a into x2.
+rename IHxs into IHxs2.
+induction xs.
+  by apply quick_sort_sorted_two.
+rename a into x3.
+move: IHxs => IHxs3.
+(* 帰納法のinduction step *)
+rewrite quick_sort_equation.
+remember (filter (fun x : nat => x <? x1) (x2 :: x3 :: xs)) as left.
+remember (filter (fun x : nat => x1 <=? x) (x2 :: x3 :: xs)) as right.
+induction left.
+- rewrite quick_sort_nil /=.
+  split.
+    move=> x.
+    rewrite -quick_sort_In.
+    rewrite Heqright.
+    rewrite filter_In.
+    case.
+    move=> _.
+    by apply Compare_dec.leb_complete.
+  induction right.
+    by rewrite quick_sort_nil.
+  rename a into pivot.
+  suff: filter (fun x : nat => x <? pivot) right = [] /\ filter (fun x : nat => pivot <=? x) right = right.
+    case.
+    move=> HfilterR_right HfilterR_left.
+    rewrite quick_sort_equation.
+    rewrite HfilterR_right HfilterR_left.
+    case_eq right => //.
+    move=> x2' xs2' Hright.
+    rewrite quick_sort_nil -Hright /=.
+    clear x2' xs2' Hright.
+    split.
+    + move=> x.
+      rewrite -quick_sort_In.
+      rewrite -HfilterR_left.
+      rewrite filter_In.
+      case.
+      move=> _.
+      apply Nat.leb_le.
+    + apply IHright.
+      give_up.
+  split.
+    rewrite filter_nil_In.
+    move=> x Hx_in_right.
+    rewrite Nat.ltb_antisym Bool.negb_false_iff.
+    
+
+
+    move=> x.
+    Search (_ <=? _) (_ <? _).
+    rewrite Nat.ltb_antisym.
+    Search (negb _ = false).
+    rewrite Bool.negb_false_iff.
+    move=> Hx_in_right.
+    move: Heqright.
 
 
 
