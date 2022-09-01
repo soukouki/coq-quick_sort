@@ -139,7 +139,7 @@ case_eq (x1 <=? x2).
   by apply Nat.lt_le_incl.
 Qed.
 
-(* これは結構面倒そう *)
+(* 今回は時間がなかったのでやらなかったが、quick_sortを展開してleftまたはpivotまたはrightにあることを順番に確認すればいけそう *)
 Lemma quick_sort_In: forall xs x,
   In x xs <-> In x (quick_sort xs).
 Admitted.
@@ -213,6 +213,7 @@ induction left.
     apply (Hsorted_quick_sort (length (filter (fun x : nat => x1 <=? x) (x2 :: xs2)))).
     rewrite Hxs_length.
     by apply /Lt.le_lt_n_Sm /filter_length.
+(* (head :: left) ++ x1 :: right *)
 - rename a into head.
   rewrite /=.
   split.
@@ -229,17 +230,51 @@ induction left.
       apply (Hsorted_quick_sort (length (filter (fun x0 : nat => x0 <? x1) (x2 :: xs2)))).
       rewrite Hxs_length.
       by apply /Lt.le_lt_n_Sm /filter_length.
-    * move=> Hinx_right.
-      
+    * move=> Hin_right.
+      have: x1 = x \/ In x right.
+        move: Hin_right.
+        by rewrite /=.
+      clear Hin_right.
+      have: In head (head :: left) -> head <= x1.
+        rewrite Heqleft.
+        rewrite -quick_sort_In.
+        rewrite filter_In.
+        case => _.
+        rewrite Nat.ltb_lt.
+        by apply Nat.lt_le_incl.
+      move=> Hhead_le_x1.
+      case.
+      - move=> H; rewrite -H; clear H.
+        apply Hhead_le_x1.
+        apply in_eq.
+      - rewrite Heqright.
+        rewrite -quick_sort_In.
+        rewrite filter_In.
+        case => _.
+        rewrite Nat.leb_le.
+        apply Nat.le_trans.
+        apply Hhead_le_x1.
+        by apply in_eq.
+  + apply IHleft.
+    
+
+
+
+
 Admitted.
 
 Theorem quick_sort_length_ind': forall xs,
   (forall xs', S (length xs') = length xs -> sorted (quick_sort xs'))
   -> sorted (quick_sort xs).
 Proof.
-move=> xs Hlength_pred.
+move=> xs Hlength_sorted.
+set (a := fun l => (forall xs', l = length xs' -> sorted (quick_sort xs'))).
+apply (le_ind (length xs) (fun l: nat => (forall xs', length xs' <= l -> sorted (quick_sort xs')))).
+
+
 induction xs.
   by rewrite quick_sort_nil.
+move=> Hlength_pred.v
 rename a into x1.
 rename xs into xs1.
 apply quick_sort_length_ind.
