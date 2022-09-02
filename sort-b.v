@@ -418,3 +418,36 @@ induction left.
 
 
 
+Lemma quick_sort_length_0: forall xs,
+  length xs = 0 -> sorted (quick_sort xs).
+Proof.
+move=> xs Hlength_0.
+have: xs = [].
+  by apply length_zero_iff_nil.
+move=> H.
+by rewrite H quick_sort_nil.
+Qed.
+
+Lemma quick_sort_length_1: forall xs,
+  length xs = 1 -> sorted (quick_sort xs).
+Proof.
+move=> xs Hlength_1.
+suff: exists x1, xs = [x1].
+  case.
+  move=> x Hxs.
+  by rewrite Hxs quick_sort_one.
+move: Hlength_1.
+case xs => //.
+move=> x1 xs' Hlength.
+suff: xs' = [].
+  move=> H.
+  rewrite H.
+  by exists x1.
+move: Hlength.
+have: length (x1 :: xs') = S (length xs').
+  by [].
+move=> H.
+rewrite H Nat.succ_inj_wd.
+by rewrite length_zero_iff_nil.
+Qed.
+

@@ -149,39 +149,6 @@ Lemma filter_nil_In {A: Type}: forall xs f,
   filter f xs = [] <-> (forall x: A, In x xs -> f x = false).
 Admitted.
 
-Lemma quick_sort_length_0: forall xs,
-  length xs = 0 -> sorted (quick_sort xs).
-Proof.
-move=> xs Hlength_0.
-have: xs = [].
-  by apply length_zero_iff_nil.
-move=> H.
-by rewrite H quick_sort_nil.
-Qed.
-
-Lemma quick_sort_length_1: forall xs,
-  length xs = 1 -> sorted (quick_sort xs).
-Proof.
-move=> xs Hlength_1.
-suff: exists x1, xs = [x1].
-  case.
-  move=> x Hxs.
-  by rewrite Hxs quick_sort_one.
-move: Hlength_1.
-case xs => //.
-move=> x1 xs' Hlength.
-suff: xs' = [].
-  move=> H.
-  rewrite H.
-  by exists x1.
-move: Hlength.
-have: length (x1 :: xs') = S (length xs').
-  by [].
-move=> H.
-rewrite H Nat.succ_inj_wd.
-by rewrite length_zero_iff_nil.
-Qed.
-
 (* 眠かったので・・・ *)
 Lemma sorted_app: forall l r,
   sorted l -> sorted r -> (forall lx rx, In lx l -> In rx r -> lx <= rx) ->
@@ -195,7 +162,7 @@ Lemma lt_le_trans: forall n m p,
 Proof.
 Admitted.
 
-Lemma quick_sort_length_ind: forall xs,
+Lemma quick_sort_sorted_length_ind: forall xs,
   (forall xs', length xs' < length xs -> sorted (quick_sort xs')) ->
   sorted (quick_sort xs).
 Proof.
@@ -210,9 +177,9 @@ rewrite quick_sort_equation.
 have: length xs = S (length (x2 :: xs2)).
   by rewrite Hxs Hxs1 /=.
 move=> Hxs_length.
+remember (quick_sort (filter (fun x : nat => x1 <=? x) (x2 :: xs2))) as right.
 case_eq (quick_sort (filter (fun x : nat => x <? x1) (x2 :: xs2))).
-- remember (quick_sort (filter (fun x : nat => x1 <=? x) (x2 :: xs2))) as right.
-  rewrite /=.
+- rewrite /=.
   split.
   + rewrite Heqright.
     move=> x.
@@ -227,7 +194,6 @@ case_eq (quick_sort (filter (fun x : nat => x <? x1) (x2 :: xs2))).
     by apply /Lt.le_lt_n_Sm /filter_length.
 (* (head :: left) ++ x1 :: right *)
 - move=> head left Heqleft.
-  remember (quick_sort (filter (fun x : nat => x1 <=? x) (x2 :: xs2))) as right.
   rewrite /=.
   split.
   + move=> x.
@@ -312,28 +278,27 @@ case_eq (quick_sort (filter (fun x : nat => x <? x1) (x2 :: xs2))).
         by rewrite Nat.leb_le.
 Qed.
 
-Theorem quick_sort_length_ind': forall xs,
-  (forall xs', S (length xs') = length xs -> sorted (quick_sort xs'))
-  -> sorted (quick_sort xs).
+Definition length_quick_sort_sorted(l: nat) :=
+  forall xs, l = length xs -> sorted (quick_sort xs).
+
+Theorem quick_sort_sorted: forall xs,
+  sorted (quick_sort xs).
 Proof.
-move=> xs Hlength_sorted.
-set (a := fun l => (forall xs', l = length xs' -> sorted (quick_sort xs'))).
-apply (le_ind (length xs) (fun l: nat => (forall xs', length xs' <= l -> sorted (quick_sort xs')))).
-
-
-induction xs.
-  by rewrite quick_sort_nil.
-move=> Hlength_pred.v
-rename a into x1.
-rename xs into xs1.
-apply quick_sort_length_ind.
-(* xs'は、長さがxsよりも短い全てのリスト *)
-move=> l xs' Hlength.
-specialize (Hlength_pred xs').
-
-
-
-
+move=> xs.
+apply (lt_wf_ind (length xs) length_quick_sort_sorted).
+- move=> len.
+  rewrite /length_quick_sort_sorted.
+  move=> Hlength_lt_sorted xs1 Hxs1_length.
+  move: Hlength_lt_sorted.
+  subst.
+  move=> Hlength_lt_sorted.
+  apply quick_sort_sorted_length_ind.
+  move=> xs2 Hxs2_length.
+  apply (Hlength_lt_sorted (length xs2)).
+  + by [].
+  + by [].
+- by [].
+Qed.
 
 
 
