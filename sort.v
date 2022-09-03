@@ -22,7 +22,6 @@ Fixpoint sorted (xs: list nat): Prop :=
   | x1 :: (x2 :: _) as xs' => x1 <= x2 /\ sorted_simple xs'
   end. 時間があれば、sorted xs <-> sorted_simpleを示しておきたい*)
 
-(* えー・・・まぁAdmittedでいいや。そんな重要じゃないし *)
 Example sorted_example1:
   sorted ([1; 2; 3]).
 Proof.
