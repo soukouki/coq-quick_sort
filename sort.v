@@ -134,11 +134,114 @@ split.
     * by [].
 Qed.
 
+Lemma filter_negb_In {A: Type}: forall xs (x: A) f g,
+  In x xs ->
+  (forall x', g x' = negb (f x')) ->
+  In x (filter f xs) \/ In x (filter g xs).
+Proof.
+move=> xs x f g Hxin.
+case_eq (f x) => /=.
+- move=> Hfx.
+  left.
+  rewrite filter_In.
+  by split => //=.
+- move=> Hfx.
+  right.
+  rewrite filter_In.
+  split => //=.
+  rewrite (H x).
+  by rewrite Bool.negb_true_iff.
+Qed.
+
 (* 今回は時間がなかったのでやらなかったが、quick_sortを展開してleftまたはpivotまたはrightにあることを順番に確認すればいけそう *)
+Lemma quick_sort_In_ind: forall xs x,
+  (forall xs', length xs' < length xs -> (In x xs' <-> In x (quick_sort xs'))) ->
+  (In x xs <-> In x (quick_sort xs)).
+Proof.
+move=> xs x Hquick_sort_In_length.
+split.
+- move=> Hinx.
+  case_eq xs.
+    move=> H.
+    subst.
+    by rewrite quick_sort_nil.
+  move=> x1 xs1 Hxs.
+  rewrite quick_sort_equation.
+  remember (quick_sort (filter (fun x0 : nat => x0 <? x1) xs1)) as left.
+  remember (quick_sort (filter (fun x0 : nat => x1 <=? x0) xs1)) as right.
+  rewrite in_app_iff.
+  suff: x1 = x \/ In x (left ++ right).
+    rewrite /=.
+    case.
+      by right; left.
+    rewrite in_app_iff.
+    case.
+      by left.
+    by right; right.
+  suff: In x xs -> x1 = x \/ In x xs1.
+    case.
+    + by [].
+    + by left.
+    + right.
+      rewrite in_app_iff Heqleft Heqright.
+      rewrite -Hquick_sort_In_length.
+      * rewrite -Hquick_sort_In_length.
+        - apply (filter_negb_In xs1 x).
+          + by [].
+          + move=> x'.
+            by apply Nat.leb_antisym.
+        - rewrite Hxs /=.
+          by apply /Lt.le_lt_n_Sm /filter_length.
+      * rewrite Hxs /=.
+        by apply /Lt.le_lt_n_Sm /filter_length.
+  rewrite Hxs /=.
+  case.
+  + by left.
+  + by right.
+- case_eq xs.
+    by rewrite quick_sort_nil.
+  move=> x1 xs1 Hxs.
+  rewrite quick_sort_equation.
+  rewrite in_app_iff.
+  case.
+  + rewrite -Hquick_sort_In_length.
+    * rewrite filter_In /=.
+      case.
+      move=> H _.
+      by right.
+    * rewrite Hxs /=.
+      by apply /Lt.le_lt_n_Sm /filter_length.
+  + rewrite /=.
+    case.
+    * by left.
+    * rewrite -Hquick_sort_In_length.
+      - rewrite filter_In.
+        case.
+        move=> H _.
+        by right.
+      - rewrite Hxs /=.
+        by apply /Lt.le_lt_n_Sm /filter_length.
+Qed.
+
+Definition length_quick_sort_In(l: nat) :=
+  forall xs x, l = length xs -> In x xs <-> In x (quick_sort xs).
+
 Lemma quick_sort_In: forall xs x,
   In x xs <-> In x (quick_sort xs).
 Proof.
-Admitted.
+move=> xs x.
+apply (lt_wf_ind (length xs) length_quick_sort_In).
+- move=> l.
+  rewrite /length_quick_sort_In.
+  move=> Hlength_lt_In xs1 x1 Hxs1_length.
+  subst.
+  apply quick_sort_In_ind.
+  move=> xs2 Hxs2.
+  apply (Hlength_lt_In (length xs2)).
+  + by [].
+  + by [].
+- by [].
+Qed.
 
 (* 眠かったので・・・ *)
 Lemma lt_le_trans: forall n m p,
