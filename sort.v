@@ -377,8 +377,7 @@ apply (lt_wf_ind (length xs) length_quick_sort_sorted).
 - by [].
 Qed.
 
-
-
+End Sort.
 
 
 
