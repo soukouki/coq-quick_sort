@@ -243,11 +243,6 @@ apply (lt_wf_ind (length xs) length_quick_sort_In).
 - by [].
 Qed.
 
-Lemma lt_le_trans: forall n m p,
-  n < m -> m <= p -> n <= p.
-Proof.
-Admitted.
-
 Lemma quick_sort_sorted_length_ind: forall xs,
   (forall xs', length xs' < length xs -> sorted (quick_sort xs')) ->
   sorted (quick_sort xs).
@@ -337,9 +332,9 @@ case_eq (quick_sort (filter (fun x : nat => x <? x1) xs1)).
         rewrite Hxs_length.
         by apply /Nat.lt_succ_r /filter_length.
     * move=> lx rx Hlx Hrx.
-      move: lt_le_trans => H.
+      move: Nat.le_trans => H.
       apply (H _ x1 _); clear H.
-      - suff: In lx (head :: left) -> lx < x1.
+      - suff: In lx (head :: left) -> lx <= x1.
           apply.
           rewrite /=.
           by right.
@@ -348,7 +343,8 @@ case_eq (quick_sort (filter (fun x : nat => x <? x1) xs1)).
         rewrite filter_In.
         case.
         move=> _.
-        by rewrite Nat.ltb_lt.
+        rewrite Nat.ltb_lt.
+        by apply Nat.lt_le_incl.
       - move: Hrx.
         rewrite /=.
         case.
