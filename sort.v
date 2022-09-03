@@ -97,42 +97,11 @@ Proof.
 by rewrite quick_sort_equation.
 Qed.
 
-Lemma quick_sort_one: forall x1: nat,
+Lemma quick_sort_single: forall x1: nat,
   quick_sort [x1] = [x1].
 Proof.
 move=> x1.
 by rewrite quick_sort_equation.
-Qed.
-
-Lemma quick_sort_sorted_two: forall x1 x2,
-  sorted (quick_sort [x1; x2]).
-Proof.
-move=> x1 x2.
-case_eq (x1 <=? x2).
-+ move=> Hx1_le_x2.
-  rewrite quick_sort_equation /=.
-  rewrite Nat.ltb_antisym.
-  rewrite Hx1_le_x2 /=.
-  rewrite quick_sort_nil quick_sort_one /=.
-  split=> //=.
-  move=> x.
-  case=> //.
-  move=> H; subst.
-  move: Hx1_le_x2.
-  by rewrite Nat.leb_le.
-+ move=> Hx1_nle_x2.
-  rewrite /=.
-  rewrite quick_sort_equation /=.
-  rewrite Nat.ltb_antisym.
-  rewrite Hx1_nle_x2 /=.
-  rewrite quick_sort_one quick_sort_nil /=.
-  split=> //=.
-  move=> x.
-  case=> //.
-  move=> H; subst.
-  move: Hx1_nle_x2.
-  rewrite Nat.leb_gt.
-  by apply Nat.lt_le_incl.
 Qed.
 
 Lemma sorted_app: forall l r,
@@ -189,7 +158,7 @@ case_eq xs.
   by rewrite quick_sort_nil.
 move=> x1 xs1 Hxs.
 case_eq xs1.
-  by rewrite quick_sort_one.
+  by rewrite quick_sort_single.
 move=> x2 xs2 Hxs1.
 rewrite quick_sort_equation.
 have: length xs = S (length (x2 :: xs2)).
