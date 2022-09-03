@@ -15,10 +15,6 @@ Fixpoint sorted (xs: list nat): Prop :=
   | x1 :: xs1 => (forall x, In x xs1 -> x1 <= x) /\ sorted xs1
   end.
 
-Lemma sorted_ind: forall xs x1,
-  (forall x, In x xs -> x1 <= x) /\ sorted xs -> sorted (x1 :: xs).
-Proof. auto. Qed.
-
 (* Fixpoint sorted_simple (xs: list nat): Prop :=
   match xs with
   | [] => True
@@ -139,20 +135,42 @@ case_eq (x1 <=? x2).
   by apply Nat.lt_le_incl.
 Qed.
 
-(* 今回は時間がなかったのでやらなかったが、quick_sortを展開してleftまたはpivotまたはrightにあることを順番に確認すればいけそう *)
-Lemma quick_sort_In: forall xs x,
-  In x xs <-> In x (quick_sort xs).
-Admitted.
-
-(* これは割と簡単そう *)
-Lemma filter_nil_In {A: Type}: forall xs f,
-  filter f xs = [] <-> (forall x: A, In x xs -> f x = false).
-Admitted.
-
-(* 眠かったので・・・ *)
 Lemma sorted_app: forall l r,
   sorted l -> sorted r -> (forall lx rx, In lx l -> In rx r -> lx <= rx) ->
   sorted (l ++ r).
+Proof.
+move=> l r Hsorted_l Hsorted_r Hlx_le_rx.
+induction l.
+  by [].
+rename a into l1.
+suff: sorted (l1 :: l ++ r).
+  by [].
+rewrite /=.
+split.
+- move=> x Hin_x.
+  have: In x l \/ In x r.
+    by rewrite -in_app_iff.
+  case.
+  + move=> Hx_in.
+    move: Hsorted_l.
+    rewrite /=.
+    case.
+    move=> H _.
+    by apply H.
+  + apply Hlx_le_rx.
+    apply in_eq.
+- apply IHl.
+  + by apply Hsorted_l.
+  + move=> lx rx Hlx_in Hrx_in.
+    apply Hlx_le_rx.
+    * rewrite /=.
+      by right.
+    * by [].
+Qed.
+
+(* 今回は時間がなかったのでやらなかったが、quick_sortを展開してleftまたはpivotまたはrightにあることを順番に確認すればいけそう *)
+Lemma quick_sort_In: forall xs x,
+  In x xs <-> In x (quick_sort xs).
 Proof.
 Admitted.
 
