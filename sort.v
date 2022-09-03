@@ -59,26 +59,20 @@ Qed.
 Function quick_sort (xs: list nat) {measure length}: list nat :=
   match xs with
   | [] => []
-  | x1 :: [] => [x1]
   | pivot :: xs1 =>
     let right := filter (fun x => x <? pivot) xs1 in
     let left := filter (fun x => pivot <=? x) xs1 in
       (quick_sort right) ++ pivot :: (quick_sort left)
   end.
 Proof.
-(* xs = pivot :: x2 :: xs3 *)
-(* xs1 = x2 :: xs3 *)
-move=> xs pivot xs1 x2 xs2 Hxs1 Hxs.
-suff: length (filter _ (x2 :: xs2)) < S (length (x2 :: xs2)).
-  by apply.
-move=> b.
+(* xs = pivot :: xs1 *)
+move=> xs pivot xs1 Hxs.
+rewrite /=.
 apply Nat.lt_succ_r.
 by apply filter_length.
 
-move=> xs pivot xs1 x2 xs2 Hxs1 Hxs.
-suff: length (filter _ (x2 :: xs2)) < S (length (x2 :: xs2)).
-  by apply.
-move=> b.
+move=> xs pivot xs1 Hxs.
+rewrite /=.
 apply Nat.lt_succ_r.
 by apply filter_length.
 Qed.
@@ -88,7 +82,9 @@ Example quick_sort_example:
 Proof.
 rewrite quick_sort_equation /=.
 rewrite 2!quick_sort_equation /=.
-by rewrite 2!quick_sort_equation /=.
+rewrite 2!quick_sort_equation /=.
+rewrite quick_sort_equation /=.
+by rewrite quick_sort_equation.
 Qed.
 
 Lemma quick_sort_nil:
@@ -101,6 +97,7 @@ Lemma quick_sort_single: forall x1: nat,
   quick_sort [x1] = [x1].
 Proof.
 move=> x1.
+rewrite quick_sort_equation /=.
 by rewrite quick_sort_equation.
 Qed.
 
@@ -157,15 +154,12 @@ move=> xs Hsorted_quick_sort.
 case_eq xs. 
   by rewrite quick_sort_nil.
 move=> x1 xs1 Hxs.
-case_eq xs1.
-  by rewrite quick_sort_single.
-move=> x2 xs2 Hxs1.
 rewrite quick_sort_equation.
-have: length xs = S (length (x2 :: xs2)).
-  by rewrite Hxs Hxs1 /=.
+have: length xs = S (length xs1).
+  by rewrite Hxs /=.
 move=> Hxs_length.
-remember (quick_sort (filter (fun x : nat => x1 <=? x) (x2 :: xs2))) as right.
-case_eq (quick_sort (filter (fun x : nat => x <? x1) (x2 :: xs2))).
+remember (quick_sort (filter (fun x : nat => x1 <=? x) xs1)) as right.
+case_eq (quick_sort (filter (fun x : nat => x <? x1) xs1)).
 - rewrite /=.
   split.
   + rewrite Heqright.
