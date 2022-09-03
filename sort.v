@@ -270,9 +270,7 @@ apply (lt_wf_ind (length xs) length_quick_sort_sorted).
 - move=> len.
   rewrite /length_quick_sort_sorted.
   move=> Hlength_lt_sorted xs1 Hxs1_length.
-  move: Hlength_lt_sorted.
   subst.
-  move=> Hlength_lt_sorted.
   apply quick_sort_sorted_length_ind.
   move=> xs2 Hxs2_length.
   apply (Hlength_lt_sorted (length xs2)).
