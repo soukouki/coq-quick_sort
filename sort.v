@@ -78,12 +78,13 @@ by apply filter_length.
 Qed.
 
 Example quick_sort_example:
-  quick_sort [3; 1; 4; 2] = [1; 2; 3; 4].
+  quick_sort [3; 4; 1; 4; 2] = [1; 2; 3; 4; 4].
 Proof.
 rewrite quick_sort_equation /=.
 rewrite 2!quick_sort_equation /=.
 rewrite 2!quick_sort_equation /=.
 rewrite quick_sort_equation /=.
+rewrite 2!quick_sort_equation /=.
 by rewrite quick_sort_equation.
 Qed.
 
@@ -153,7 +154,6 @@ case_eq (f x) => /=.
   by rewrite Bool.negb_true_iff.
 Qed.
 
-(* 今回は時間がなかったのでやらなかったが、quick_sortを展開してleftまたはpivotまたはrightにあることを順番に確認すればいけそう *)
 Lemma quick_sort_In_ind: forall xs x,
   (forall xs', length xs' < length xs -> (In x xs' <-> In x (quick_sort xs'))) ->
   (In x xs <-> In x (quick_sort xs)).
@@ -243,7 +243,6 @@ apply (lt_wf_ind (length xs) length_quick_sort_In).
 - by [].
 Qed.
 
-(* 眠かったので・・・ *)
 Lemma lt_le_trans: forall n m p,
   n < m -> m <= p -> n <= p.
 Proof.
