@@ -15,13 +15,6 @@ Fixpoint sorted (xs: list nat): Prop :=
   | x1 :: xs1 => (forall x, In x xs1 -> x1 <= x) /\ sorted xs1
   end.
 
-(* Fixpoint sorted_simple (xs: list nat): Prop :=
-  match xs with
-  | [] => True
-  | x1 :: [] => True
-  | x1 :: (x2 :: _) as xs' => x1 <= x2 /\ sorted_simple xs'
-  end. 時間があれば、sorted xs <-> sorted_simpleを示しておきたい*)
-
 Example sorted_example1:
   sorted ([1; 2; 3]).
 Proof.
@@ -41,6 +34,87 @@ split.
   auto.
 split=> //.
 Qed.
+
+(* 上のsortedの定義は少しややこしいので、もっとシンプルな定義と同値なことを証明しておきます *)
+Fixpoint sorted_simple (xs: list nat): Prop :=
+  match xs with
+  | [] => True
+  | x1 :: [] => True
+  | x1 :: (x2 :: _) as xs' => x1 <= x2 /\ sorted_simple xs'
+  end.
+
+Theorem sorted_simple_iff: forall xs,
+  sorted xs <-> sorted_simple xs.
+Proof.
+move=> xs.
+induction xs.
+  by rewrite /=.
+split.
+- rename a into x1.
+  rewrite /=.
+  case.
+  move=> Hx1_le_xs Hxs_sorted.
+  case_eq xs => //.
+  move=> x2 xs2 Hxs.
+  rewrite -Hxs.
+  split.
+  + apply Hx1_le_xs.
+    rewrite Hxs /=.
+    by left.
+  + by apply IHxs.
+(* x1 :: xs *)
+(* x1 :: x2 :: xs2 *)
+- rename a into x1.
+  case_eq xs.
+    by [].
+  move=> x2 xs2 Hxs.
+  rewrite -Hxs /=.
+  rewrite IHxs Hxs.
+  rewrite -Hxs -IHxs.
+  case.
+  move=> Hx1_le_x2 Hsorted.
+  split.
+    move=> x Hx_in_xs.
+    apply (Nat.le_trans x1 x2 x).
+      by [].
+    (* あれーー？？ *)
+
+
+  + by [].
+
+
+
+
+  move=> Hsorted_simple.
+  rewrite /=.
+  split.
+  + move=> x Hx_in_xs.
+    move: Hsorted_simple.
+    rewrite /=.
+    case_eq xs.
+    * move=> Hxs _.
+      move: Hx_in_xs.
+      by rewrite Hxs /=.
+    * move=> x2 xs2 Hxs.
+      case.
+      move=> Hx1_le_x2.
+      rewrite -Hxs -IHxs.
+      move=> Hsorted.
+      case_eq (x1 <=? x).
+      - move=> Hx1_le_x.
+        apply (Nat.le_trans x1 x2 x).
+        + by [].
+        + 
+      apply (Nat.le_trans x1 x2 x).
+      - by [].
+      - move: Hsorted.
+        rewrite Hxs /=.
+        case.
+        move=> Hx2_le_xs2 Hxs2_sorted.
+        apply Hx2_le_xs2. (* 仮定が足りん *)
+
+
+Admitted.
 
 Lemma filter_length {A: Type} : forall (xs: list A) f,
   length (filter f xs) <= length xs.
