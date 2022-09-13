@@ -43,14 +43,16 @@ Fixpoint sorted_simple (xs: list nat): Prop :=
   | x1 :: (x2 :: _) as xs' => x1 <= x2 /\ sorted_simple xs'
   end.
 
+Definition length_sorted_simple(l: nat) :=
+  forall xs, l = length xs -> sorted_simple xs -> sorted xs.
+
 Theorem sorted_simple_iff: forall xs,
   sorted xs <-> sorted_simple xs.
 Proof.
 move=> xs.
-induction xs.
-  by rewrite /=.
 split.
-- rename a into x1.
+- induction xs => //.
+  rename a into x1.
   rewrite /=.
   case.
   move=> Hx1_le_xs Hxs_sorted.
@@ -62,59 +64,43 @@ split.
     rewrite Hxs /=.
     by left.
   + by apply IHxs.
-(* x1 :: xs *)
-(* x1 :: x2 :: xs2 *)
-- rename a into x1.
-  case_eq xs.
-    by [].
-  move=> x2 xs2 Hxs.
-  rewrite -Hxs /=.
-  rewrite IHxs Hxs.
-  rewrite -Hxs -IHxs.
-  case.
-  move=> Hx1_le_x2 Hsorted.
+- apply: (lt_wf_ind (length xs) length_sorted_simple) => //.
+  clear xs.
+  move=> l.
+  rewrite /length_sorted_simple.
+  move=> Hlength_lt_sorted xs H Hsorted_simple.
+  subst.
+  case_eq xs => //=.
+  move=> x1 xs1 Hxs.
   split.
-    move=> x Hx_in_xs.
-    apply (Nat.le_trans x1 x2 x).
-      by [].
-    (* あれーー？？ *)
-
-
-  + by [].
-
-
-
-
-  move=> Hsorted_simple.
-  rewrite /=.
-  split.
-  + move=> x Hx_in_xs.
-    move: Hsorted_simple.
+  + move: Hsorted_simple.
+    rewrite Hxs /=.
+    case_eq xs1 => //.
+    move=> x2 xs2 Hxs1.
+    case.
+    move=> Hx1_le_x2 Hsorted_simple_xs1 x.
     rewrite /=.
-    case_eq xs.
-    * move=> Hxs _.
-      move: Hx_in_xs.
-      by rewrite Hxs /=.
-    * move=> x2 xs2 Hxs.
+    case.
+      by move=> H; rewrite -H.
+    move=> Hx_in_xs2.
+    apply (Nat.le_trans x1 x2 x) => //.
+    suff: sorted xs1.
+      rewrite Hxs1 /=.
       case.
-      move=> Hx1_le_x2.
-      rewrite -Hxs -IHxs.
-      move=> Hsorted.
-      case_eq (x1 <=? x).
-      - move=> Hx1_le_x.
-        apply (Nat.le_trans x1 x2 x).
-        + by [].
-        + 
-      apply (Nat.le_trans x1 x2 x).
-      - by [].
-      - move: Hsorted.
-        rewrite Hxs /=.
-        case.
-        move=> Hx2_le_xs2 Hxs2_sorted.
-        apply Hx2_le_xs2. (* 仮定が足りん *)
-
-
-Admitted.
+      move=> H _.
+      by apply H.
+    apply (Hlength_lt_sorted (length xs1)) => //.
+    * by rewrite Hxs /=.
+    * by rewrite Hxs1.
+  + apply (Hlength_lt_sorted (length xs1)) => //.
+    * by rewrite Hxs /=.
+    * move: Hsorted_simple.
+      rewrite Hxs /=.
+      case_eq xs1 => //.
+      move=> x2 xs2 Hxs1.
+      case.
+      by move=> _ H.
+Qed.
 
 Lemma filter_length {A: Type} : forall (xs: list A) f,
   length (filter f xs) <= length xs.
