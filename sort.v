@@ -289,17 +289,14 @@ Lemma quick_sort_In: forall xs x,
   In x xs <-> In x (quick_sort xs).
 Proof.
 move=> xs x.
-apply (lt_wf_ind (length xs) length_quick_sort_In).
-- move=> l.
-  rewrite /length_quick_sort_In.
-  move=> Hlength_lt_In xs1 x1 Hxs1_length.
-  subst.
-  apply quick_sort_In_ind.
-  move=> xs2 Hxs2.
-  apply (Hlength_lt_In (length xs2)).
-  + by [].
-  + by [].
-- by [].
+apply (lt_wf_ind (length xs) length_quick_sort_In) => //.
+move=> l.
+rewrite /length_quick_sort_In.
+move=> Hlength_lt_In xs1 x1 Hxs1_length.
+subst.
+apply quick_sort_In_ind.
+move=> xs2 Hxs2.
+apply (Hlength_lt_In (length xs2)) => //.
 Qed.
 
 Lemma quick_sort_sorted_length_ind: forall xs,
@@ -423,17 +420,14 @@ Theorem quick_sort_sorted: forall xs,
   sorted (quick_sort xs).
 Proof.
 move=> xs.
-apply (lt_wf_ind (length xs) length_quick_sort_sorted).
-- move=> len.
-  rewrite /length_quick_sort_sorted.
-  move=> Hlength_lt_sorted xs1 Hxs1_length.
-  subst.
-  apply quick_sort_sorted_length_ind.
-  move=> xs2 Hxs2_length.
-  apply (Hlength_lt_sorted (length xs2)).
-  + by [].
-  + by [].
-- by [].
+apply (lt_wf_ind (length xs) length_quick_sort_sorted) => //.
+move=> len.
+rewrite /length_quick_sort_sorted.
+move=> Hlength_lt_sorted xs1 Hxs1_length.
+subst.
+apply quick_sort_sorted_length_ind.
+move=> xs2 Hxs2_length.
+apply (Hlength_lt_sorted (length xs2)) => //.
 Qed.
 
 End Sort.
