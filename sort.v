@@ -425,6 +425,122 @@ move=> xs2 Hxs2_length.
 apply (Hlength_lt_sorted (length xs2)) => //.
 Qed.
 
+
+
+Definition count_nat := count_occ Nat.eq_dec.
+
+(* count_occを気にせず使いたいので、置き換えるための補題 *)
+Lemma count_nat_app: forall (l1 l2: list nat) (n: nat),
+  count_nat (l1 ++ l2) n = count_nat l1 n + count_nat l2 n.
+Proof.
+move=> l1 l2 n.
+by rewrite !/count_nat count_occ_app.
+Qed.
+Lemma count_nat_cons_eq: forall (l: list nat) (x n: nat),
+  x = n -> count_nat (x :: l) n = S (count_nat l n).
+Proof.
+move=> l x n Hx_eq_n.
+by rewrite !/count_nat count_occ_cons_eq.
+Qed.
+Lemma count_nat_cons_neq: forall (l: list nat) (x n: nat),
+  x <> n -> count_nat (x :: l) n = count_nat l n.
+Proof.
+move=> l x n Hx_neq_n.
+by rewrite !/count_nat count_occ_cons_neq.
+Qed.
+
+Lemma filter_negb_count_nat: forall xs f g,
+  (forall x, g x = negb (f x)) ->
+  (forall x, count_nat xs x = count_nat (filter f xs) x + count_nat (filter g xs) x).
+Proof.
+move=> xs f g Hgf n.
+induction xs => //.
+case_eq (f a).
+- move=> Hfa_true.
+  rewrite /= Hgf Hfa_true /=.
+  case (Nat.eq_dec a n) => _ //.
+  rewrite Nat.add_succ_l.
+  by apply eq_S.
+- move=> Hfa_false.
+  rewrite /= Hgf Hfa_false /=.
+  case (Nat.eq_dec a n) => _ //.
+  rewrite Nat.add_succ_r.
+  by apply eq_S.
+Qed.
+
+Lemma quick_sort_count_ind: forall xs,
+  (forall xs', length xs' < length xs ->
+    forall n, count_nat (quick_sort xs') n = count_nat xs' n) ->
+  forall n, count_nat (quick_sort xs) n = count_nat xs n.
+Proof.
+move=> xs Hsorted_count n.
+case_eq xs.
+  by rewrite quick_sort_nil.
+move=> x1 xs1 Hxs.
+rewrite quick_sort_equation.
+rewrite count_nat_app.
+case_eq (x1 =? n).
+- rewrite Nat.eqb_eq => Hx1_eq_n.
+  rewrite count_nat_cons_eq => //.
+  rewrite count_nat_cons_eq => //.
+  rewrite Nat.add_succ_r.
+  apply eq_S.
+  have: forall fg, length (filter fg xs1) < length xs.
+    move=> fg.
+    rewrite Hxs /=.
+    rewrite Nat.lt_succ_r.
+    apply filter_length.
+  move=> Hfilter_length.
+  rewrite Hsorted_count => //.
+  rewrite Hsorted_count => //.
+  rewrite -filter_negb_count_nat => //.
+  move=> x.
+  by apply Nat.leb_antisym.
+- rewrite Nat.eqb_neq => Hx1_neq_n.
+  rewrite count_nat_cons_neq => //.
+  rewrite count_nat_cons_neq => //.
+  have: forall fg, length (filter fg xs1) < length xs.
+    move=> fg.
+    rewrite Hxs /=.
+    rewrite Nat.lt_succ_r.
+    apply filter_length.
+  move=> Hfilter_length.
+  rewrite Hsorted_count => //.
+  rewrite Hsorted_count => //.
+  rewrite -filter_negb_count_nat => //.
+  move=> x.
+  by apply Nat.leb_antisym.
+Qed.
+
+Definition length_quick_sort_count(l: nat) :=
+  forall xs, l = length xs -> forall n, count_nat (quick_sort xs) n = count_nat xs n.
+
+Lemma quick_sort_count: forall xs,
+  forall n, count_nat (quick_sort xs) n = count_nat xs n.
+Proof.
+move=> xs n.
+apply (lt_wf_ind (length xs) length_quick_sort_count) => // len.
+rewrite /length_quick_sort_count => Hlength_lt_sort_count xs1 Hxs1_length.
+subst.
+apply quick_sort_count_ind => xs2 Hxs2_length.
+apply (Hlength_lt_sort_count (length xs2)) => //.
+Qed.
+
+Definition sort_algorithm (alg: list nat -> list nat) :=
+  forall xs, sorted (alg xs) /\ forall n, count_nat (alg xs) n = count_nat xs n.
+
+(*
+  ということできちんとクイックソートがソートアルゴリズムであることが証明できました。
+  これで安心してクイックソートを使えます！
+*)
+Theorem quick_sort_is_sort_algorithm: sort_algorithm quick_sort.
+Proof.
+rewrite /sort_algorithm => xs.
+split.
+- by apply quick_sort_sorted.
+- by apply quick_sort_count.
+Qed.
+
 End Sort.
 
 
