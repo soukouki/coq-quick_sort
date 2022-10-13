@@ -2,12 +2,7 @@ Require Import List PeanoNat FunInd Arith.Wf_nat Recdef.
 Import ListNotations.
 From mathcomp Require Import ssreflect.
 
-Set Implicit Arguments.
-
 Module Sort.
-
-Local Open Scope list_scope.
-Local Open Scope bool_scope.
 
 Fixpoint sorted (xs: list nat): Prop :=
   match xs with
