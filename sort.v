@@ -4,6 +4,7 @@ From mathcomp Require Import ssreflect.
 
 Module Sort.
 
+(* ソートされている性質。累積帰納法と相性が良いように定義した *)
 Fixpoint sorted (xs: list nat): Prop :=
   match xs with
   | [] => True
@@ -13,21 +14,9 @@ Fixpoint sorted (xs: list nat): Prop :=
 Example sorted_example1:
   sorted ([1; 2; 3]).
 Proof.
-rewrite /=.
-split.
-  move=> x.
-  case.
-    move=> H; rewrite -H.
-    auto.
-  case=> //.
-    move=> H; rewrite -H.
-    auto.
-split.
-  move=> x.
-  case=> //.
-  move=> H; rewrite -H.
-  auto.
-split=> //.
+repeat split => //=; move=> x.
+- move=> [<- | [<- | H]] => //; by auto.
+- case => // <-; by auto.
 Qed.
 
 (* 上のsortedの定義は少しややこしいので、もっとシンプルな定義と同値なことを証明しておきます *)
