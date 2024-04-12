@@ -27,9 +27,6 @@ Fixpoint sorted_simple (xs: list nat): Prop :=
   | x1 :: (x2 :: _) as xs' => x1 <= x2 /\ sorted_simple xs'
   end.
 
-Definition length_sorted_simple(l: nat) :=
-  forall xs, l = length xs -> sorted_simple xs -> sorted xs.
-
 Theorem sorted_simple_iff: forall xs,
   sorted xs <-> sorted_simple xs.
 Proof.
@@ -47,10 +44,9 @@ split.
     rewrite Hxs /=.
     by left.
   + by apply IHxs.
-- apply: (lt_wf_ind (length xs) length_sorted_simple) => //.
+- apply: (lt_wf_ind (length xs) (fun l => forall xs, l = length xs -> sorted_simple xs -> sorted xs)) => //.
   clear xs.
   move=> l.
-  rewrite /length_sorted_simple.
   move=> Hlength_lt_sorted xs H Hsorted_simple.
   subst.
   case_eq xs => //=.
