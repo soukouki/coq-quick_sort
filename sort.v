@@ -69,10 +69,10 @@ split.
       move=> H _.
       by apply H.
     apply (Hlength_lt_sorted (length xs1)) => //.
-    * by rewrite Hxs /=.
+    * by rewrite Hxs.
     * by rewrite Hxs1.
   + apply (Hlength_lt_sorted (length xs1)) => //.
-    * by rewrite Hxs /=.
+    * by rewrite Hxs.
     * move: Hsorted_simple.
       rewrite Hxs /=.
       case_eq xs1 => //.
@@ -84,8 +84,7 @@ Lemma filter_length {A: Type} : forall (xs: list A) f,
   length (filter f xs) <= length xs.
 Proof.
 move=> xs f.
-induction xs => //.
-rewrite /=.
+induction xs => //=.
 case (f a) => /=.
 - by rewrite -Nat.succ_le_mono.
 - by apply Nat.le_le_succ_r.
@@ -101,13 +100,11 @@ Function quick_sort (xs: list nat) {measure length}: list nat :=
   end.
 Proof.
 (* xs = pivot :: xs1 *)
-move=> xs pivot xs1 Hxs.
-rewrite /=.
+move=> xs pivot xs1 Hxs /=.
 apply Nat.lt_succ_r.
 by apply filter_length.
 
-move=> xs pivot xs1 Hxs.
-rewrite /=.
+move=> xs pivot xs1 Hxs /=.
 apply Nat.lt_succ_r.
 by apply filter_length.
 Qed.
@@ -143,8 +140,7 @@ Lemma sorted_app: forall l r,
 Proof.
 move=> l r Hsorted_l Hsorted_r Hlx_le_rx.
 induction l as [|l1] => //.
-rewrite -app_comm_cons.
-rewrite /=.
+rewrite -app_comm_cons /=.
 split.
 - (* x is a element of l ++ r *)
   move=> x Hin_x.
@@ -161,8 +157,7 @@ split.
 - apply IHl.
   + by apply Hsorted_l.
   + move=> lx rx Hlx_in Hrx_in.
-    apply Hlx_le_rx => //.
-    rewrite /=.
+    apply Hlx_le_rx => //=.
     by right.
 Qed.
 
@@ -175,7 +170,7 @@ move=> xs x f g Hxin.
 case_eq (f x) => Hfx.
 - left.
   rewrite filter_In.
-  by split => //.
+  by split.
 - right.
   rewrite filter_In.
   split => //.
@@ -217,7 +212,7 @@ split.
         by apply /Lt.le_lt_n_Sm /filter_length.
       * rewrite Hxs /=.
         by apply /Lt.le_lt_n_Sm /filter_length.
-  by rewrite Hxs /=.
+  by rewrite Hxs.
 - case_eq xs.
     by rewrite quick_sort_nil.
   move=> x1 xs1 Hxs.
